@@ -1,0 +1,32 @@
+{
+  "app_id": "iphone-experto-telcel-zvrqk3",
+  "baseline_version": "1790209027114",
+  "public_domain": "https://iphone.expertotelcel.com/",
+  "official_overlay_current": true,
+  "appdeploy_plan": "free",
+  "credit_reset_utc": "2026-09-25T00:00:00.000Z",
+  "billing_change_authorized": false,
+  "assets": {
+    "public/share-only.js": "03f1e36223a4581c564bf19d658198273ced4c8b0d881fd0e377ec144bb9112a",
+    "public/share-only.css": "f9017755f8ab7ec19023c70d117968bf336dcc3c6ee64b8b4173e6cefcfc9644",
+    "public/manifest.json": "e9830b000bc6c9b1f1691028640d4ed563cf4d908c76a0ff15e798ca1591e30b"
+  },
+  "target_files": [
+    "index.html",
+    "public/app-interface-v1.js",
+    "public/styles.css",
+    "public/modelos/18-pro-max/512gb/index.html",
+    "public/share-only.js",
+    "public/share-only.css",
+    "public/manifest.json"
+  ],
+  "required_changes": [
+    "Inject /share-only.css and /manifest.json in root and model page heads.",
+    "Inject /share-only.js before body close in root and model page.",
+    "Apply root tablist/table accessibility fixes already proven by the canary.",
+    "Add AI illustration alt and visible disclosure below the 512 GB poster.",
+    "Preserve prices, URLs, canonicals, robots index/follow, CTA and schema."
+  ],
+  "rollback": "Apply AppDeploy version 1790209027114.",
+  "global_gate": "HOLD until public single-share result and final triple audit PASS"
+}

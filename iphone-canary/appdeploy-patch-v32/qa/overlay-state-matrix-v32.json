@@ -1,0 +1,290 @@
+[
+  {
+    "route": "home",
+    "state": "overlay_on",
+    "showOverlay": true,
+    "width": 390,
+    "httpStatus": 200,
+    "bodyClass": "et-interface-v1",
+    "share": {
+      "count": 1,
+      "hidden": true,
+      "visible": false,
+      "className": "et-native-share",
+      "rect": {
+        "width": 0,
+        "height": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "sticky": {
+      "width": 358,
+      "rightGap": 16
+    },
+    "overlayApiGuardActive": true,
+    "axeViolations": [],
+    "overflow": false,
+    "smallTargets": [],
+    "disclosure": null,
+    "manifestHref": "http://127.0.0.1:8788/manifest.json",
+    "canonical": "https://iphone.expertotelcel.com/",
+    "sharePayload": null,
+    "runtimeErrors": [],
+    "httpErrors": []
+  },
+  {
+    "route": "home",
+    "state": "overlay_on",
+    "showOverlay": true,
+    "width": 320,
+    "httpStatus": 200,
+    "bodyClass": "et-interface-v1",
+    "share": {
+      "count": 1,
+      "hidden": true,
+      "visible": false,
+      "className": "et-native-share",
+      "rect": {
+        "width": 0,
+        "height": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "sticky": {
+      "width": 288,
+      "rightGap": 16
+    },
+    "overlayApiGuardActive": true,
+    "axeViolations": [],
+    "overflow": false,
+    "smallTargets": [],
+    "disclosure": null,
+    "manifestHref": "http://127.0.0.1:8788/manifest.json",
+    "canonical": "https://iphone.expertotelcel.com/",
+    "sharePayload": null,
+    "runtimeErrors": [],
+    "httpErrors": []
+  },
+  {
+    "route": "home",
+    "state": "overlay_off",
+    "showOverlay": false,
+    "width": 390,
+    "httpStatus": 200,
+    "bodyClass": "et-interface-v1 et-native-share-active",
+    "share": {
+      "count": 1,
+      "hidden": false,
+      "visible": true,
+      "className": "et-native-share et-share-visible",
+      "rect": {
+        "width": 52,
+        "height": 52,
+        "x": 326,
+        "y": 780
+      }
+    },
+    "sticky": {
+      "width": 298,
+      "rightGap": 76
+    },
+    "overlayApiGuardActive": true,
+    "axeViolations": [],
+    "overflow": false,
+    "smallTargets": [],
+    "disclosure": null,
+    "manifestHref": "http://127.0.0.1:8788/manifest.json",
+    "canonical": "https://iphone.expertotelcel.com/",
+    "sharePayload": {
+      "title": "iPhone 18, Duo, 17 y 16 | EXPERTO TELCEL",
+      "text": "Especial iPhone de EXPERTO TELCEL",
+      "url": "http://127.0.0.1:8788/?matrix=1790233351332"
+    },
+    "runtimeErrors": [],
+    "httpErrors": []
+  },
+  {
+    "route": "home",
+    "state": "overlay_off",
+    "showOverlay": false,
+    "width": 320,
+    "httpStatus": 200,
+    "bodyClass": "et-interface-v1 et-native-share-active",
+    "share": {
+      "count": 1,
+      "hidden": false,
+      "visible": true,
+      "className": "et-native-share et-share-visible",
+      "rect": {
+        "width": 52,
+        "height": 52,
+        "x": 256,
+        "y": 780
+      }
+    },
+    "sticky": {
+      "width": 228,
+      "rightGap": 76
+    },
+    "overlayApiGuardActive": true,
+    "axeViolations": [],
+    "overflow": false,
+    "smallTargets": [],
+    "disclosure": null,
+    "manifestHref": "http://127.0.0.1:8788/manifest.json",
+    "canonical": "https://iphone.expertotelcel.com/",
+    "sharePayload": {
+      "title": "iPhone 18, Duo, 17 y 16 | EXPERTO TELCEL",
+      "text": "Especial iPhone de EXPERTO TELCEL",
+      "url": "http://127.0.0.1:8788/?matrix=1790233353640"
+    },
+    "runtimeErrors": [],
+    "httpErrors": []
+  },
+  {
+    "route": "model",
+    "state": "overlay_on",
+    "showOverlay": true,
+    "width": 390,
+    "httpStatus": 200,
+    "bodyClass": "",
+    "share": {
+      "count": 1,
+      "hidden": true,
+      "visible": false,
+      "className": "et-native-share",
+      "rect": {
+        "width": 0,
+        "height": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "sticky": {
+      "width": 190,
+      "rightGap": 186
+    },
+    "overlayApiGuardActive": true,
+    "axeViolations": [],
+    "overflow": false,
+    "smallTargets": [],
+    "disclosure": "Imagen promocional ilustrativa generada con IA; no es fotografía oficial. Colores y acabados reales sujetos a confirmación oficial de Apple y Telcel.",
+    "manifestHref": "http://127.0.0.1:8788/manifest.json",
+    "canonical": "https://iphone.expertotelcel.com/modelos/18-pro-max/512gb/",
+    "sharePayload": null,
+    "runtimeErrors": [],
+    "httpErrors": []
+  },
+  {
+    "route": "model",
+    "state": "overlay_on",
+    "showOverlay": true,
+    "width": 320,
+    "httpStatus": 200,
+    "bodyClass": "",
+    "share": {
+      "count": 1,
+      "hidden": true,
+      "visible": false,
+      "className": "et-native-share",
+      "rect": {
+        "width": 0,
+        "height": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "sticky": {
+      "width": 172,
+      "rightGap": 134
+    },
+    "overlayApiGuardActive": true,
+    "axeViolations": [],
+    "overflow": false,
+    "smallTargets": [],
+    "disclosure": "Imagen promocional ilustrativa generada con IA; no es fotografía oficial. Colores y acabados reales sujetos a confirmación oficial de Apple y Telcel.",
+    "manifestHref": "http://127.0.0.1:8788/manifest.json",
+    "canonical": "https://iphone.expertotelcel.com/modelos/18-pro-max/512gb/",
+    "sharePayload": null,
+    "runtimeErrors": [],
+    "httpErrors": []
+  },
+  {
+    "route": "model",
+    "state": "overlay_off",
+    "showOverlay": false,
+    "width": 390,
+    "httpStatus": 200,
+    "bodyClass": "et-native-share-active",
+    "share": {
+      "count": 1,
+      "hidden": false,
+      "visible": true,
+      "className": "et-native-share et-share-visible",
+      "rect": {
+        "width": 52,
+        "height": 52,
+        "x": 326,
+        "y": 780
+      }
+    },
+    "sticky": {
+      "width": 302,
+      "rightGap": 76
+    },
+    "overlayApiGuardActive": true,
+    "axeViolations": [],
+    "overflow": false,
+    "smallTargets": [],
+    "disclosure": "Imagen promocional ilustrativa generada con IA; no es fotografía oficial. Colores y acabados reales sujetos a confirmación oficial de Apple y Telcel.",
+    "manifestHref": "http://127.0.0.1:8788/manifest.json",
+    "canonical": "https://iphone.expertotelcel.com/modelos/18-pro-max/512gb/",
+    "sharePayload": {
+      "title": "Descubre iPhone 18 Pro Max 512 GB | EXPERTO TELCEL",
+      "text": "Especial iPhone de EXPERTO TELCEL",
+      "url": "http://127.0.0.1:8788/modelos/18-pro-max/512gb/?matrix=1790233360291"
+    },
+    "runtimeErrors": [],
+    "httpErrors": []
+  },
+  {
+    "route": "model",
+    "state": "overlay_off",
+    "showOverlay": false,
+    "width": 320,
+    "httpStatus": 200,
+    "bodyClass": "et-native-share-active",
+    "share": {
+      "count": 1,
+      "hidden": false,
+      "visible": true,
+      "className": "et-native-share et-share-visible",
+      "rect": {
+        "width": 52,
+        "height": 52,
+        "x": 256,
+        "y": 780
+      }
+    },
+    "sticky": {
+      "width": 232,
+      "rightGap": 76
+    },
+    "overlayApiGuardActive": true,
+    "axeViolations": [],
+    "overflow": false,
+    "smallTargets": [],
+    "disclosure": "Imagen promocional ilustrativa generada con IA; no es fotografía oficial. Colores y acabados reales sujetos a confirmación oficial de Apple y Telcel.",
+    "manifestHref": "http://127.0.0.1:8788/manifest.json",
+    "canonical": "https://iphone.expertotelcel.com/modelos/18-pro-max/512gb/",
+    "sharePayload": {
+      "title": "Descubre iPhone 18 Pro Max 512 GB | EXPERTO TELCEL",
+      "text": "Especial iPhone de EXPERTO TELCEL",
+      "url": "http://127.0.0.1:8788/modelos/18-pro-max/512gb/?matrix=1790233363674"
+    },
+    "runtimeErrors": [],
+    "httpErrors": []
+  }
+]
