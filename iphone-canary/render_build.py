@@ -204,4 +204,53 @@ styles += """
 """
 styles_path.write_text(styles, encoding='utf-8')
 
-print(json.dumps({'output': str(PUBLIC), 'files': len([p for p in PUBLIC.rglob('*') if p.is_file()])}, indent=2))
+# v31: overwrite the generated helper assets with the audited share-only implementation.
+ASSETS = Path(__file__).resolve().parent / 'assets'
+for asset_name in ('share-only.js', 'share-only.css', 'manifest.json'):
+    shutil.copy2(ASSETS / asset_name, PUBLIC / asset_name)
+
+# The public canary must never be indexed while it carries production canonicals.
+(PUBLIC / 'robots.txt').write_text(
+    'User-agent: *\nDisallow: /\n\n# Canary de validación. No indexar.\n',
+    encoding='utf-8',
+)
+
+# Make the explicit 404 document deterministic and console-clean.
+not_found = PUBLIC / '404.html'
+if not_found.exists():
+    text = not_found.read_text(encoding='utf-8')
+    title = '<title>Página no encontrada | EXPERTO TELCEL</title>'
+    if 'rel="canonical"' not in text:
+        text = text.replace(
+            title,
+            title + '\n<link rel="canonical" href="https://iphone.expertotelcel.com/404.html">'
+            + '\n<link rel="icon" href="/favicon.svg" type="image/svg+xml">',
+            1,
+        )
+    not_found.write_text(text, encoding='utf-8')
+
+# Build receipt for reproducibility; excludes itself from the file hash list.
+from datetime import datetime, timezone
+build_files = {}
+for source_path in sorted(PUBLIC.rglob('*')):
+    if source_path.is_file() and source_path.name != 'canary-build.json':
+        rel = source_path.relative_to(PUBLIC).as_posix()
+        build_files[rel] = hashlib.sha256(source_path.read_bytes()).hexdigest()
+receipt = {
+    'version': 'iphone-share-only-v31',
+    'render_git_commit': __import__('os').environ.get('RENDER_GIT_COMMIT'),
+    'generated_at_utc': datetime.now(timezone.utc).isoformat(),
+    'noindex': True,
+    'native_share_only': True,
+    'files': build_files,
+}
+(PUBLIC / 'canary-build.json').write_text(
+    json.dumps(receipt, ensure_ascii=False, indent=2) + '\n',
+    encoding='utf-8',
+)
+
+print(json.dumps({
+    'output': str(PUBLIC),
+    'files': len([path for path in PUBLIC.rglob('*') if path.is_file()]),
+    'version': 'iphone-share-only-v31',
+}, indent=2))

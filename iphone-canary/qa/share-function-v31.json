@@ -1,0 +1,54 @@
+[
+  {
+    "route": "/",
+    "width": 390,
+    "before": {
+      "count": 1,
+      "aria": "Compartir esta página"
+    },
+    "payload": {
+      "title": "iPhone 18, Duo, 17 y 16 | EXPERTO TELCEL",
+      "text": "Especial iPhone de EXPERTO TELCEL",
+      "url": "http://127.0.0.1:8773/?share=1790229930190"
+    }
+  },
+  {
+    "route": "/",
+    "width": 320,
+    "before": {
+      "count": 1,
+      "aria": "Compartir esta página"
+    },
+    "payload": {
+      "title": "iPhone 18, Duo, 17 y 16 | EXPERTO TELCEL",
+      "text": "Especial iPhone de EXPERTO TELCEL",
+      "url": "http://127.0.0.1:8773/?share=1790229931863"
+    }
+  },
+  {
+    "route": "/modelos/18-pro-max/512gb/",
+    "width": 390,
+    "before": {
+      "count": 1,
+      "aria": "Compartir esta página"
+    },
+    "payload": {
+      "title": "Descubre iPhone 18 Pro Max 512 GB | EXPERTO TELCEL",
+      "text": "Especial iPhone de EXPERTO TELCEL",
+      "url": "http://127.0.0.1:8773/modelos/18-pro-max/512gb/?share=1790229933404"
+    }
+  },
+  {
+    "route": "/modelos/18-pro-max/512gb/",
+    "width": 320,
+    "before": {
+      "count": 1,
+      "aria": "Compartir esta página"
+    },
+    "payload": {
+      "title": "Descubre iPhone 18 Pro Max 512 GB | EXPERTO TELCEL",
+      "text": "Especial iPhone de EXPERTO TELCEL",
+      "url": "http://127.0.0.1:8773/modelos/18-pro-max/512gb/?share=1790229935070"
+    }
+  }
+]
