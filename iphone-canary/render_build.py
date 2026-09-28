@@ -2,7 +2,9 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 import re, shutil, json, hashlib, tarfile
 
-BASE = 'https://iphone.expertotelcel.com/'
+import os
+BASE = os.environ.get('IPHONE_SOURCE_BASE', 'https://iphone-experto-telcel-zvrqk3.v2.appdeploy.ai/').rstrip('/') + '/'
+EXPECTED_SOURCE_VERSION = os.environ.get('IPHONE_SOURCE_VERSION', '1790376266272')
 OUT = Path(__file__).resolve().parent / 'out'
 PUBLIC = OUT
 if OUT.exists():
@@ -74,6 +76,15 @@ def clean_html(raw: bytes, *, noindex: bool = True) -> str:
         text,
         flags=re.I,
     )
+    text = text.replace('./manifest.json', '/manifest.json')
+    text = text.replace('./share-only.css', '/share-only.css')
+    text = text.replace('./share-only.js', '/share-only.js')
+    def normalize_chat_anchor(match):
+        opening, body, closing = match.groups()
+        if '<img' in body.lower() or 'premium-poster' in opening.lower():
+            return match.group(0)
+        return f'{opening}chat.eXpertoTelceL.com{closing}'
+    text = re.sub(r'(<a\b[^>]*href=["\']https://chat\.expertotelcel\.com/["\'][^>]*>)(.*?)(</a\s*>)', normalize_chat_anchor, text, flags=re.I | re.S)
     if noindex:
         text = re.sub(r'<meta\s+name="(?:robots|googlebot)"[^>]*>', '', text, flags=re.I)
         text = text.replace(
@@ -86,7 +97,10 @@ def clean_html(raw: bytes, *, noindex: bool = True) -> str:
         text = text.replace('</head>', inject + '\n</head>', 1)
     return text
 downloads = []
-root_html = clean_html(fetch(BASE), noindex=True)
+root_raw = fetch(BASE)
+if EXPECTED_SOURCE_VERSION.encode('utf-8') not in root_raw:
+    raise RuntimeError(f'EXPECTED_SOURCE_VERSION_NOT_FOUND:{EXPECTED_SOURCE_VERSION}')
+root_html = clean_html(root_raw, noindex=True)
 (PUBLIC / 'index.html').write_text(root_html, encoding='utf-8')
 downloads.append('index.html')
 
@@ -237,7 +251,9 @@ for source_path in sorted(PUBLIC.rglob('*')):
         rel = source_path.relative_to(PUBLIC).as_posix()
         build_files[rel] = hashlib.sha256(source_path.read_bytes()).hexdigest()
 receipt = {
-    'version': 'iphone-share-only-v31',
+    'version': 'iphone-v38-failover-r1',
+    'source_base': BASE,
+    'source_version': EXPECTED_SOURCE_VERSION,
     'render_git_commit': __import__('os').environ.get('RENDER_GIT_COMMIT'),
     'generated_at_utc': datetime.now(timezone.utc).isoformat(),
     'noindex': True,
@@ -252,5 +268,7 @@ receipt = {
 print(json.dumps({
     'output': str(PUBLIC),
     'files': len([path for path in PUBLIC.rglob('*') if path.is_file()]),
-    'version': 'iphone-share-only-v31',
+    'version': 'iphone-v38-failover-r1',
+    'source_base': BASE,
+    'source_version': EXPECTED_SOURCE_VERSION,
 }, indent=2))

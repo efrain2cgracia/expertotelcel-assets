@@ -69,6 +69,12 @@
       element.classList.add('et-scrollable-region');
     });
   };
+  const normalizeChatLabels = () => {
+    document.querySelectorAll('a[href="https://chat.expertotelcel.com/"]').forEach(link => {
+      if (link.querySelector('img') || link.classList.contains('premium-poster')) return;
+      link.textContent = 'chat.eXpertoTelceL.com';
+    });
+  };
   let scheduled = false;
   const reconcile = () => {
     if (scheduled) return;
@@ -76,6 +82,7 @@
     window.requestAnimationFrame(() => {
       scheduled = false;
       mountShare();
+      normalizeChatLabels();
       hardenMobile();
     });
   };
