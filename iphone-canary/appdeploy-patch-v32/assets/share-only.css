@@ -1,0 +1,108 @@
+/* EXPERTO TELCEL native mobile share control. */
+.et-native-share {
+  display: none;
+}
+.et-share-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+@media (max-width: 620px) {
+  body.et-native-share-active .mobile-cta {
+    right: 76px !important;
+  }
+  body.et-native-share-active .mobile-sticky-cta {
+    position: fixed !important;
+    left: 12px !important;
+    right: 76px !important;
+    bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    top: auto !important;
+    width: auto !important;
+    margin: 0 !important;
+    z-index: 60 !important;
+  }
+  .et-native-share.et-share-visible {
+    position: fixed;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index: 2147483000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    min-width: 52px;
+    height: 52px;
+    min-height: 52px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 50%;
+    background: #1e40af;
+    color: #fff;
+    box-shadow: 0 16px 40px rgba(7, 21, 45, 0.35);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .et-native-share svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .et-native-share:focus-visible {
+    outline: 4px solid #00d2ff;
+    outline-offset: 3px;
+  }
+}
+/* Last-loaded mobile accessibility guarantees. */
+@media (max-width: 620px) {
+  .brand,
+  .card-body a,
+  .series-link,
+  details summary,
+  .footer-grid a {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 44px !important;
+  }
+  .table-wrap:focus-visible {
+    outline: 4px solid #00d2ff !important;
+    outline-offset: 3px !important;
+  }
+}.image-disclaimer {
+  margin: 10px auto 0;
+  max-width: 440px;
+  color: #f7f9ff;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* Cross-route mobile accessibility applied after dynamic rendering. */
+@media (max-width: 620px) {
+  .et-touch-target {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .et-scrollable-region:focus-visible {
+    outline: 4px solid #00d2ff !important;
+    outline-offset: 3px !important;
+  }
+}
+body[data-series="16"] .series-route[aria-current="page"],
+body[data-series="16"] .model-index {
+  color: #3e579e !important;
+}
+body[data-series="17"] .series-route[aria-current="page"],
+body[data-series="17"] .model-index,
+body[data-series="17"] .kicker[style*="--accent"] {
+  color: #9b341f !important;
+}

@@ -1,0 +1,324 @@
+from pathlib import Path
+from urllib.request import Request, urlopen
+import re, shutil, json, hashlib, tarfile
+
+import os
+ROOT = Path(__file__).resolve().parent
+BASE = os.environ.get('IPHONE_SOURCE_BASE', 'https://iphone-experto-telcel-zvrqk3.v2.appdeploy.ai/').rstrip('/') + '/'
+EXPECTED_SOURCE_VERSION = os.environ.get('IPHONE_SOURCE_VERSION', '1790376266272')
+FORCE_PINNED_SOURCE = os.environ.get('IPHONE_FORCE_PINNED_SOURCE', '').strip().lower() in {'1', 'true', 'yes', 'on'}
+PINNED_SOURCE = ROOT / 'pinned-v38-source'
+PINNED_MANIFEST_PATH = PINNED_SOURCE / 'pinned-source-manifest.json'
+PINNED_MANIFEST_SHA_PATH = PINNED_SOURCE / 'pinned-source-manifest.sha256'
+OUT = ROOT / 'out'
+PUBLIC = OUT
+if OUT.exists():
+    shutil.rmtree(OUT)
+PUBLIC.mkdir(parents=True)
+
+paths = [
+    '404.html', 'a5bd56b8bf995b435dea6f839cd81784.txt',
+    'app-interface-v1.js', 'app.js', 'buscador-de-promociones/index.html',
+    'favicon.svg', 'interface-v1.css', 'interfaz-v1.html',
+    'iphone-duo/index.html', 'llms-full.txt', 'llms.txt',
+    'model-page.css', 'model-page.js',
+    'modelos/18-pro-max/1tb/index.html',
+    'modelos/18-pro-max/256gb/index.html',
+    'modelos/18-pro-max/2tb/index.html',
+    'modelos/18-pro-max/512gb/index.html',
+]
+paths += [
+    'modelos/18-pro/1tb/index.html',
+    'modelos/18-pro/256gb/index.html',
+    'modelos/18-pro/2tb/index.html',
+    'modelos/18-pro/512gb/index.html',
+    'preview-interface-v1.js', 'promociones/index.html',
+    'promociones/pospago/celular-mas-audifonos/index.html',
+    'promociones/pospago/celular-mas-reloj/index.html',
+    'promociones/pospago/index.html',
+    'promociones/prepago/celular-mas-audifonos/index.html',
+    'promociones/prepago/celular-mas-reloj/index.html',
+    'promociones/prepago/index.html',
+    'promotions-data.js', 'promotions.css', 'robots.txt',
+    'series-16/index.html', 'series-17/index.html',
+    'series-18/index.html', 'series-pages.css', 'series-pages.js',
+    'sitemap.xml', 'styles.css',
+]
+
+UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+
+if not PINNED_MANIFEST_PATH.is_file() or not PINNED_MANIFEST_SHA_PATH.is_file():
+    raise RuntimeError('PINNED_SOURCE_MANIFEST_MISSING')
+pinned_manifest_bytes = PINNED_MANIFEST_PATH.read_bytes()
+pinned_manifest_sha = hashlib.sha256(pinned_manifest_bytes).hexdigest()
+pinned_manifest_sha_expected = PINNED_MANIFEST_SHA_PATH.read_text(encoding='utf-8').split()[0]
+if pinned_manifest_sha != pinned_manifest_sha_expected:
+    raise RuntimeError('PINNED_SOURCE_MANIFEST_HASH_MISMATCH')
+pinned_manifest = json.loads(pinned_manifest_bytes.decode('utf-8'))
+if pinned_manifest.get('source_version') != EXPECTED_SOURCE_VERSION:
+    raise RuntimeError('PINNED_SOURCE_VERSION_MISMATCH')
+pinned_hashes = pinned_manifest.get('files', {})
+source_modes = {}
+fallback_files = []
+network_errors = {}
+
+def read_pinned(rel: str) -> bytes:
+    target = PINNED_SOURCE / rel
+    if not target.is_file() or rel not in pinned_hashes:
+        raise RuntimeError(f'PINNED_SOURCE_FILE_MISSING:{rel}')
+    data = target.read_bytes()
+    if hashlib.sha256(data).hexdigest() != pinned_hashes[rel]:
+        raise RuntimeError(f'PINNED_SOURCE_FILE_HASH_MISMATCH:{rel}')
+    return data
+
+
+def fetch_source(rel: str) -> bytes:
+    url = BASE if rel == 'index.html' else BASE + rel
+    if not FORCE_PINNED_SOURCE:
+        try:
+            request = Request(url, headers={'User-Agent': UA, 'Cache-Control': 'no-cache'})
+            with urlopen(request, timeout=45) as response:
+                data = response.read()
+            if rel == 'index.html' and EXPECTED_SOURCE_VERSION.encode('utf-8') not in data:
+                raise RuntimeError('NETWORK_SOURCE_VERSION_MISMATCH')
+            source_modes[rel] = 'network'
+            return data
+        except Exception as error:
+            network_errors[rel] = f'{type(error).__name__}:{error}'
+    data = read_pinned(rel)
+    if rel == 'index.html' and EXPECTED_SOURCE_VERSION.encode('utf-8') not in data:
+        raise RuntimeError('PINNED_SOURCE_VERSION_NOT_FOUND_IN_ROOT')
+    source_modes[rel] = 'pinned'
+    fallback_files.append(rel)
+    return data
+PWA_BLOCK = re.compile(
+    r'<!--pwa-meta-->.*?<script>if\(\'serviceWorker\'.*?</script>\s*',
+    re.S,
+)
+SOURCE_ID = re.compile(r'\sdata-appdeploy-source-id="[^"]*"')
+
+def clean_html(raw: bytes, *, noindex: bool = True) -> str:
+    text = raw.decode('utf-8', errors='replace')
+    start = text.lower().find('<!doctype html')
+    if start < 0:
+        start = text.lower().find('<html')
+    if start >= 0:
+        text = text[start:]
+    text = PWA_BLOCK.sub('', text)
+    text = SOURCE_ID.sub('', text)
+    text = re.sub(r'<script>window\.__APPDEPLOY_APP_ID=.*?</script>', '', text, flags=re.S)
+    text = text.replace('<!--appdeploy-meta-->', '')
+    text = re.sub(r'<[^>]+data-appdeploy="true"[^>]*>', '', text, flags=re.I)
+    text = re.sub(r'<link[^>]+rel="preconnect"[^>]+iphone-experto-telcel-zvrqk3\.v2\.appdeploy\.ai[^>]*>', '', text, flags=re.I)
+    text = re.sub(r'<link[^>]+href="https://appdeploy\.ai/assets/[^"]+"[^>]*>', '', text, flags=re.I)
+    text = text.replace(
+        'https://iphone-experto-telcel-zvrqk3.v2.appdeploy.ai/',
+        '/',
+    )
+    text = re.sub(
+        r'<script[^>]+(?:v2\.appdeploy\.ai/shared/js/overlay\.js|data-appdeploy-overlay-bootstrap)[\s\S]*?</script>',
+        '',
+        text,
+        flags=re.I,
+    )
+    text = text.replace('./manifest.json', '/manifest.json')
+    text = text.replace('./share-only.css', '/share-only.css')
+    text = text.replace('./share-only.js', '/share-only.js')
+    def normalize_chat_anchor(match):
+        opening, body, closing = match.groups()
+        if '<img' in body.lower() or 'premium-poster' in opening.lower():
+            return match.group(0)
+        return f'{opening}chat.eXpertoTelceL.com{closing}'
+    text = re.sub(r'(<a\b[^>]*href=["\']https://chat\.expertotelcel\.com/["\'][^>]*>)(.*?)(</a\s*>)', normalize_chat_anchor, text, flags=re.I | re.S)
+    if noindex:
+        text = re.sub(r'<meta\s+name="(?:robots|googlebot)"[^>]*>', '', text, flags=re.I)
+        text = text.replace(
+            '<head>',
+            '<head>\n<meta name="robots" content="noindex,nofollow">\n<meta name="googlebot" content="noindex,nofollow">',
+            1,
+        )
+    inject = '<link rel="stylesheet" href="/share-only.css">\n<script src="/share-only.js" defer></script>'
+    if '/share-only.js' not in text:
+        text = text.replace('</head>', inject + '\n</head>', 1)
+    return text
+downloads = []
+root_raw = fetch_source('index.html')
+root_html = clean_html(root_raw, noindex=True)
+(PUBLIC / 'index.html').write_text(root_html, encoding='utf-8')
+downloads.append('index.html')
+
+for rel in paths:
+    target = PUBLIC / rel
+    target.parent.mkdir(parents=True, exist_ok=True)
+    raw = fetch_source(rel)
+    if rel.endswith('.html'):
+        target.write_text(clean_html(raw, noindex=True), encoding='utf-8')
+    else:
+        target.write_bytes(raw)
+    downloads.append(rel)
+
+model_page = PUBLIC / 'modelos/18-pro-max/512gb/index.html'
+model = model_page.read_text(encoding='utf-8')
+model = model.replace(
+    'Diseño premium en color borgoña del iPhone 18 Pro Max 512 GB con equipo a 1,396 pesos al mes, Plan Telcel desde 599 pesos y total mensual de 1,995 pesos.',
+    'Ilustración conceptual generada con IA del iPhone 18 Pro Max 512 GB en color borgoña; no es una fotografía oficial.',
+)
+disclosure = 'Imagen promocional ilustrativa generada con IA; no es fotografía oficial. Colores y acabados reales sujetos a confirmación oficial de Apple y Telcel.'
+if 'class="image-disclaimer"' in model:
+    model = re.sub(r'<p class="image-disclaimer">.*?</p>', f'<p class="image-disclaimer">{disclosure}</p>', model, flags=re.S)
+else:
+    model = model.replace('</a></div></section><section class="section intent-bridge">', f'</a><p class="image-disclaimer">{disclosure}</p></div></section><section class="section intent-bridge">')
+model_page.write_text(model, encoding='utf-8')
+share_js = r"""(() => {
+  'use strict';
+  if (document.getElementById('et-native-share')) return;
+  const button = document.createElement('button');
+  button.id = 'et-native-share';
+  button.className = 'et-native-share';
+  button.type = 'button';
+  button.setAttribute('aria-label', 'Compartir esta página');
+  button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 10.5 15.4 6.5M8.6 13.5l6.8 4"></path></svg>';
+  const status = document.createElement('span');
+  status.className = 'et-share-status';
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  const announce = message => {
+    status.textContent = message;
+    window.setTimeout(() => { status.textContent = ''; }, 2200);
+  };
+  button.addEventListener('click', async () => {
+    const data = { title: document.title, text: 'Especial iPhone de EXPERTO TELCEL', url: window.location.href };
+    try {
+      if (navigator.share) { await navigator.share(data); return; }
+      await navigator.clipboard.writeText(window.location.href);
+      announce('Enlace copiado');
+    } catch (error) {
+      if (error && error.name === 'AbortError') return;
+      try { await navigator.clipboard.writeText(window.location.href); announce('Enlace copiado'); }
+      catch { announce('No se pudo compartir'); }
+    }
+  });
+  document.body.append(button, status);
+})();
+"""
+(PUBLIC / 'share-only.js').write_text(share_js, encoding='utf-8')
+share_css = r"""
+.et-native-share{display:none}
+.et-share-status{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media (max-width:620px){
+  .mobile-cta{right:76px!important}
+  .mobile-sticky-cta{position:fixed!important;left:12px!important;right:76px!important;bottom:max(12px,env(safe-area-inset-bottom))!important;top:auto!important;width:auto!important;margin:0!important;z-index:60!important}
+  .et-native-share{position:fixed;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:61;display:flex;align-items:center;justify-content:center;width:52px;height:52px;min-width:52px;min-height:52px;padding:0;border:1px solid rgba(255,255,255,.32);border-radius:50%;background:#1e40af;color:#fff;box-shadow:0 16px 40px rgba(7,21,45,.35);cursor:pointer}
+  .et-native-share svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .et-native-share:focus-visible{outline:4px solid #00d2ff;outline-offset:3px}
+}
+"""
+(PUBLIC / 'share-only.css').write_text(share_css.strip() + '\n', encoding='utf-8')
+
+manifest = {
+    'name': 'EXPERTO TELCEL — Micrositio iPhone',
+    'short_name': 'iPhone ET',
+    'start_url': '/',
+    'display': 'standalone',
+    'background_color': '#f5f7fb',
+    'theme_color': '#071631',
+    'icons': [],
+}
+(PUBLIC / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False), encoding='utf-8')
+(PUBLIC / 'sw.js').write_text("self.addEventListener('fetch',()=>{});\n", encoding='utf-8')
+home_path = PUBLIC / 'index.html'
+home = home_path.read_text(encoding='utf-8')
+home = home.replace(
+    '<button class="active" type="button" data-choice="equilibrio">',
+    '<button class="active" type="button" role="tab" aria-selected="true" data-choice="equilibrio">',
+)
+for choice in ('pantalla', 'movilidad', 'multitarea'):
+    home = home.replace(
+        f'<button type="button" data-choice="{choice}">',
+        f'<button type="button" role="tab" aria-selected="false" data-choice="{choice}">',
+    )
+home = home.replace(
+    '<div class="table-wrap">',
+    '<div class="table-wrap" tabindex="0" aria-label="Tabla comparativa de modelos iPhone">',
+)
+home_path.write_text(home, encoding='utf-8')
+
+app_js_path = PUBLIC / 'app-interface-v1.js'
+app_js = app_js_path.read_text(encoding='utf-8')
+app_js = app_js.replace(
+    "item.classList.toggle('active', item === button);",
+    "const selected = item === button;\n        item.classList.toggle('active', selected);\n        item.setAttribute('aria-selected', String(selected));",
+)
+app_js_path.write_text(app_js, encoding='utf-8')
+styles_path = PUBLIC / 'styles.css'
+styles = styles_path.read_text(encoding='utf-8')
+styles += """
+/* Canary accessibility hardening. */
+@media (max-width:620px){
+  .brand,.series-link,.card a,details summary,.footer-grid a{display:inline-flex;align-items:center;min-height:44px}
+  .table-wrap:focus-visible{outline:4px solid #00d2ff;outline-offset:3px}
+}
+"""
+styles_path.write_text(styles, encoding='utf-8')
+
+# v31: overwrite the generated helper assets with the audited share-only implementation.
+ASSETS = Path(__file__).resolve().parent / 'assets'
+for asset_name in ('share-only.js', 'share-only.css', 'manifest.json'):
+    shutil.copy2(ASSETS / asset_name, PUBLIC / asset_name)
+
+# The public canary must never be indexed while it carries production canonicals.
+(PUBLIC / 'robots.txt').write_text(
+    'User-agent: *\nDisallow: /\n\n# Canary de validación. No indexar.\n',
+    encoding='utf-8',
+)
+
+# Make the explicit 404 document deterministic and console-clean.
+not_found = PUBLIC / '404.html'
+if not_found.exists():
+    text = not_found.read_text(encoding='utf-8')
+    title = '<title>Página no encontrada | EXPERTO TELCEL</title>'
+    if 'rel="canonical"' not in text:
+        text = text.replace(
+            title,
+            title + '\n<link rel="canonical" href="https://iphone.expertotelcel.com/404.html">'
+            + '\n<link rel="icon" href="/favicon.svg" type="image/svg+xml">',
+            1,
+        )
+    not_found.write_text(text, encoding='utf-8')
+
+# Build receipt for reproducibility; excludes itself from the file hash list.
+from datetime import datetime, timezone
+build_files = {}
+for source_path in sorted(PUBLIC.rglob('*')):
+    if source_path.is_file() and source_path.name != 'canary-build.json':
+        rel = source_path.relative_to(PUBLIC).as_posix()
+        build_files[rel] = hashlib.sha256(source_path.read_bytes()).hexdigest()
+receipt = {
+    'version': 'iphone-v38-failover-r1',
+    'source_base': BASE,
+    'source_version': EXPECTED_SOURCE_VERSION,
+    'source_mode': 'pinned' if len(fallback_files) == len(source_modes) else ('network' if not fallback_files else 'mixed'),
+    'fallback_files': sorted(fallback_files),
+    'network_errors': network_errors,
+    'pinned_manifest_sha256': pinned_manifest_sha,
+    'render_git_commit': __import__('os').environ.get('RENDER_GIT_COMMIT'),
+    'generated_at_utc': datetime.now(timezone.utc).isoformat(),
+    'noindex': True,
+    'native_share_only': True,
+    'files': build_files,
+}
+(PUBLIC / 'canary-build.json').write_text(
+    json.dumps(receipt, ensure_ascii=False, indent=2) + '\n',
+    encoding='utf-8',
+)
+
+print(json.dumps({
+    'output': str(PUBLIC),
+    'files': len([path for path in PUBLIC.rglob('*') if path.is_file()]),
+    'version': 'iphone-v38-failover-r1',
+    'source_base': BASE,
+    'source_version': EXPECTED_SOURCE_VERSION,
+    'source_mode': receipt['source_mode'],
+    'fallback_count': len(fallback_files),
+    'pinned_manifest_sha256': pinned_manifest_sha,
+}, indent=2))

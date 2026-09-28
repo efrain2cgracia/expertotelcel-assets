@@ -1,0 +1,38 @@
+# EXPERTO TELCEL — Especial iPhone
+
+Sitio especializado en iPhone con precios, promociones y orientación Telcel para contratación, renovación y portabilidad.
+
+## Fuente comercial actual
+- Versión de promoción: Telcel V9.6
+- Fecha de publicación por EXPERTO TELCEL: 2026-09-19
+- Vencimiento documental: 2026-09-25
+
+## Reglas de lectura
+- El precio prepago con IVA no es una mensualidad.
+- La renta del plan y el financiamiento del equipo se muestran separados.
+- Financiamiento sin intereses significa sin sobreprecio desde el Plan Telcel Libre mínimo indicado.
+- Las referencias de combos suman componentes y no son precio oficial único del paquete.
+- Promociones sujetas a cambios sin previo aviso por parte de Telcel.
+- Modelo, capacidad y color dependen del inventario regional de Telcel.
+- Efraín confirma la cotización en tiempo real mediante https://chat.expertotelcel.com/
+
+## URLs principales del micrositio
+- https://iphone.expertotelcel.com/series-18/
+- https://iphone.expertotelcel.com/promociones/
+- https://iphone.expertotelcel.com/promociones/pospago/
+- https://iphone.expertotelcel.com/promociones/prepago/
+
+## Fichas canónicas de producto
+- https://expertotelcel.com/marcas/apple/iphone/18-pro/256gb/
+- https://expertotelcel.com/marcas/apple/iphone/18-pro/512gb/
+- https://expertotelcel.com/marcas/apple/iphone/18-pro/1tb/
+- https://expertotelcel.com/marcas/apple/iphone/18-pro/2tb/
+- https://expertotelcel.com/marcas/apple/iphone/18-pro-max/256gb/
+- https://expertotelcel.com/marcas/apple/iphone/18-pro-max/512gb/
+- https://expertotelcel.com/marcas/apple/iphone/18-pro-max/1tb/
+- https://expertotelcel.com/marcas/apple/iphone/18-pro-max/2tb/
+
+Las fichas equivalentes bajo iphone.expertotelcel.com permanecen disponibles como experiencia premium autosuficiente, sin redirección obligatoria, y declaran la ficha de expertotelcel.com como URL canónica para consolidar señales SEO.
+
+## Cobertura comercial
+EXPERTO TELCEL tramita contratación, renovación y portabilidad y entrega en casa u oficina en todo México, excepto Baja California y Baja California Sur.
