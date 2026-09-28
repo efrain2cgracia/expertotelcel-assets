@@ -3,9 +3,14 @@ from urllib.request import Request, urlopen
 import re, shutil, json, hashlib, tarfile
 
 import os
+ROOT = Path(__file__).resolve().parent
 BASE = os.environ.get('IPHONE_SOURCE_BASE', 'https://iphone-experto-telcel-zvrqk3.v2.appdeploy.ai/').rstrip('/') + '/'
 EXPECTED_SOURCE_VERSION = os.environ.get('IPHONE_SOURCE_VERSION', '1790376266272')
-OUT = Path(__file__).resolve().parent / 'out'
+FORCE_PINNED_SOURCE = os.environ.get('IPHONE_FORCE_PINNED_SOURCE', '').strip().lower() in {'1', 'true', 'yes', 'on'}
+PINNED_SOURCE = ROOT / 'pinned-v38-source'
+PINNED_MANIFEST_PATH = PINNED_SOURCE / 'pinned-source-manifest.json'
+PINNED_MANIFEST_SHA_PATH = PINNED_SOURCE / 'pinned-source-manifest.sha256'
+OUT = ROOT / 'out'
 PUBLIC = OUT
 if OUT.exists():
     shutil.rmtree(OUT)
@@ -42,10 +47,50 @@ paths += [
 
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
 
-def fetch(url: str) -> bytes:
-    req = Request(url, headers={'User-Agent': UA, 'Cache-Control': 'no-cache'})
-    with urlopen(req, timeout=45) as response:
-        return response.read()
+if not PINNED_MANIFEST_PATH.is_file() or not PINNED_MANIFEST_SHA_PATH.is_file():
+    raise RuntimeError('PINNED_SOURCE_MANIFEST_MISSING')
+pinned_manifest_bytes = PINNED_MANIFEST_PATH.read_bytes()
+pinned_manifest_sha = hashlib.sha256(pinned_manifest_bytes).hexdigest()
+pinned_manifest_sha_expected = PINNED_MANIFEST_SHA_PATH.read_text(encoding='utf-8').split()[0]
+if pinned_manifest_sha != pinned_manifest_sha_expected:
+    raise RuntimeError('PINNED_SOURCE_MANIFEST_HASH_MISMATCH')
+pinned_manifest = json.loads(pinned_manifest_bytes.decode('utf-8'))
+if pinned_manifest.get('source_version') != EXPECTED_SOURCE_VERSION:
+    raise RuntimeError('PINNED_SOURCE_VERSION_MISMATCH')
+pinned_hashes = pinned_manifest.get('files', {})
+source_modes = {}
+fallback_files = []
+network_errors = {}
+
+def read_pinned(rel: str) -> bytes:
+    target = PINNED_SOURCE / rel
+    if not target.is_file() or rel not in pinned_hashes:
+        raise RuntimeError(f'PINNED_SOURCE_FILE_MISSING:{rel}')
+    data = target.read_bytes()
+    if hashlib.sha256(data).hexdigest() != pinned_hashes[rel]:
+        raise RuntimeError(f'PINNED_SOURCE_FILE_HASH_MISMATCH:{rel}')
+    return data
+
+
+def fetch_source(rel: str) -> bytes:
+    url = BASE if rel == 'index.html' else BASE + rel
+    if not FORCE_PINNED_SOURCE:
+        try:
+            request = Request(url, headers={'User-Agent': UA, 'Cache-Control': 'no-cache'})
+            with urlopen(request, timeout=45) as response:
+                data = response.read()
+            if rel == 'index.html' and EXPECTED_SOURCE_VERSION.encode('utf-8') not in data:
+                raise RuntimeError('NETWORK_SOURCE_VERSION_MISMATCH')
+            source_modes[rel] = 'network'
+            return data
+        except Exception as error:
+            network_errors[rel] = f'{type(error).__name__}:{error}'
+    data = read_pinned(rel)
+    if rel == 'index.html' and EXPECTED_SOURCE_VERSION.encode('utf-8') not in data:
+        raise RuntimeError('PINNED_SOURCE_VERSION_NOT_FOUND_IN_ROOT')
+    source_modes[rel] = 'pinned'
+    fallback_files.append(rel)
+    return data
 PWA_BLOCK = re.compile(
     r'<!--pwa-meta-->.*?<script>if\(\'serviceWorker\'.*?</script>\s*',
     re.S,
@@ -97,9 +142,7 @@ def clean_html(raw: bytes, *, noindex: bool = True) -> str:
         text = text.replace('</head>', inject + '\n</head>', 1)
     return text
 downloads = []
-root_raw = fetch(BASE)
-if EXPECTED_SOURCE_VERSION.encode('utf-8') not in root_raw:
-    raise RuntimeError(f'EXPECTED_SOURCE_VERSION_NOT_FOUND:{EXPECTED_SOURCE_VERSION}')
+root_raw = fetch_source('index.html')
 root_html = clean_html(root_raw, noindex=True)
 (PUBLIC / 'index.html').write_text(root_html, encoding='utf-8')
 downloads.append('index.html')
@@ -107,7 +150,7 @@ downloads.append('index.html')
 for rel in paths:
     target = PUBLIC / rel
     target.parent.mkdir(parents=True, exist_ok=True)
-    raw = fetch(BASE + rel)
+    raw = fetch_source(rel)
     if rel.endswith('.html'):
         target.write_text(clean_html(raw, noindex=True), encoding='utf-8')
     else:
@@ -254,6 +297,10 @@ receipt = {
     'version': 'iphone-v38-failover-r1',
     'source_base': BASE,
     'source_version': EXPECTED_SOURCE_VERSION,
+    'source_mode': 'pinned' if len(fallback_files) == len(source_modes) else ('network' if not fallback_files else 'mixed'),
+    'fallback_files': sorted(fallback_files),
+    'network_errors': network_errors,
+    'pinned_manifest_sha256': pinned_manifest_sha,
     'render_git_commit': __import__('os').environ.get('RENDER_GIT_COMMIT'),
     'generated_at_utc': datetime.now(timezone.utc).isoformat(),
     'noindex': True,
@@ -271,4 +318,7 @@ print(json.dumps({
     'version': 'iphone-v38-failover-r1',
     'source_base': BASE,
     'source_version': EXPECTED_SOURCE_VERSION,
+    'source_mode': receipt['source_mode'],
+    'fallback_count': len(fallback_files),
+    'pinned_manifest_sha256': pinned_manifest_sha,
 }, indent=2))
